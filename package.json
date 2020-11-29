@@ -1,5 +1,5 @@
 {
-  "name": "miyaco's minecraft bot for discord",
+  "name": "miyaco's-minecraft-bot-for-discord",
   "scripts": {
     "start": "run-p watch restarter",
     "watch": "tsc --watch --esModuleInterop",
