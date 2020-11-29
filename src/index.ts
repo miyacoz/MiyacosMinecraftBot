@@ -1,4 +1,5 @@
 import Eris, { Message } from 'eris'
+import { omit } from 'lodash'
 
 import Config from './Config'
 
@@ -10,7 +11,15 @@ if (!TOKEN) {
 
 const client = Eris(TOKEN)
 
-client.on('ready', () => console.log('ready'))
+client.on('ready', () => {
+  const guild = client.guilds.find(({ name }) => /miyaco.*minecraft/i.test(name))
+
+  if (guild) {
+    const members = guild.members.filter(({ user }) => !user.bot).map(user => omit(user, ['guild', 'user']))
+    const roles = guild.roles.map(role => omit(role, 'guild'))
+    console.log('ready', guild.name, members, roles)
+  }
+})
 
 client.on('messageCreate', (msg: Message) => { // When a message is created
     if (msg.content === '!ping') { // If the message content is '!ping'
