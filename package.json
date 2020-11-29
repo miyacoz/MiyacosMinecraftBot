@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "dotenv": "^8.2.0",
+    "eris": "^0.14.0",
     "mongodb": "^3.6.3"
   },
   "devDependencies": {
