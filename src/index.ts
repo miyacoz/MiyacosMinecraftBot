@@ -8,18 +8,18 @@ if (!TOKEN) {
   throw new Error('No token found!')
 }
 
-const bot = Eris(TOKEN)
+const eris = Eris(TOKEN)
 
-bot.on('ready', () => console.log('ready'))
+eris.on('ready', () => console.log('ready'))
 
-bot.on('messageCreate', (msg: Message) => { // When a message is created
+eris.on('messageCreate', (msg: Message) => { // When a message is created
     if (msg.content === '!ping') { // If the message content is '!ping'
-        bot.createMessage(msg.channel.id, 'Pong!')
+        eris.createMessage(msg.channel.id, 'Pong!')
         // Send a message in the same channel with 'Pong!'
     } else if(msg.content === '!pong') { // Otherwise, if the message is '!pong'
-        bot.createMessage(msg.channel.id, 'Ping!')
+        eris.createMessage(msg.channel.id, 'Ping!')
         // Respond with 'Ping!'
     }
 })
 
-bot.connect()
+eris.connect()
