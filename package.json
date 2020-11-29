@@ -1,4 +1,11 @@
 {
+  "name": "miyaco's minecraft bot for discord",
+  "scripts": {
+    "start": "run-p watch restarter",
+    "watch": "tsc --watch --esModuleInterop",
+    "restarter": "nodemon ./dist/index.js",
+    "build": "tsc --esModuleInterop"
+  },
   "dependencies": {
     "dotenv": "^8.2.0",
     "mongodb": "^3.6.3"
