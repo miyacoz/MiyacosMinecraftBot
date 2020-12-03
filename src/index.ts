@@ -1,4 +1,5 @@
 import Eris, {
+  Client,
   Collection,
   Guild,
   Member,
@@ -34,7 +35,7 @@ const updateState = (guild: Guild) => {
   guild.members.filter(({ user }) => !user.bot).forEach(member => members.add(member))
   members.forEach(({ user }) => users.add(user))
   guild.roles.forEach(role => roles.add(role))
-  console.log('ready', guild.name, members.map(omitGuild))
+  // console.log(members.map(omitGuild))
   // console.log(users, roles.map(omitGuild))
 }
 
@@ -46,6 +47,16 @@ const findGuildAndUpdateState = () => {
   }
 }
 
+const reply = (client: Client, message: Message, content: string) =>
+  // FIXME: restore eris version to dev/master
+  client.createMessage(message.channel.id, {
+    content,
+    allowedMentions: {
+      repliedUser: true,
+    },
+    messageReferenceID: message.id,
+  })
+
 client
   .on('ready', findGuildAndUpdateState)
   .on('guildMemberRemove', updateState)
@@ -56,16 +67,17 @@ client
     findGuildAndUpdateState()
 
     if (message.mentions.some(user => user.id === BOT_ID)) {
-      const sanitisedMessage = message.content.replace(new RegExp(`<@!${BOT_ID}>`), '').trim().toLowerCase()
-      console.log(sanitisedMessage)
+      const r = (content: string) => reply(client, message, content)
 
-      // inline replies https://github.com/abalabahaha/eris/issues/1084
+      const sanitisedMessage = message.content.replace(new RegExp(`<@!${BOT_ID}>`), '').trim().toLowerCase()
+      console.log(sanitisedMessage, message.id)
+
       if (sanitisedMessage === 'ping') {
-        client.createMessage(message.channel.id, 'Pong!')
+        r('Pong!')
       } else if (sanitisedMessage === 'pong') {
-        client.createMessage(message.channel.id, 'Ping!')
+        r('Ping!')
       } else {
-        client.createMessage(message.channel.id, '?')
+        r('?')
       }
     }
   })
