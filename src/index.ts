@@ -21,14 +21,12 @@ client.on('ready', () => {
   }
 })
 
-client.on('messageCreate', (message: Message) => { // When a message is created
-    if (message.content === '!ping') { // If the message content is '!ping'
-        client.createMessage(message.channel.id, 'Pong!')
-        // Send a message in the same channel with 'Pong!'
-    } else if(message.content === '!pong') { // Otherwise, if the message is '!pong'
-        client.createMessage(message.channel.id, 'Ping!')
-        // Respond with 'Ping!'
-    }
+client.on('messageCreate', (message: Message) => {
+  if (message.content === '!ping') {
+    client.createMessage(message.channel.id, 'Pong!')
+  } else if(message.content === '!pong') {
+    client.createMessage(message.channel.id, 'Ping!')
+  }
 })
 
 client.connect()
