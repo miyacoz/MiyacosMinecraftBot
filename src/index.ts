@@ -7,7 +7,11 @@ import Eris, {
   Role,
   User,
 } from 'eris'
-import { omit } from 'lodash'
+// import { omit } from 'lodash'
+import {
+  EC2,
+  Credentials,
+} from 'aws-sdk'
 
 import Config from './Config'
 
@@ -23,13 +27,64 @@ if (!BOT_ID) {
   throw new Error('No client id found!')
 }
 
+const AWS_ACCESS_KEY_ID = Config.AWS_ACCESS_KEY_ID
+const AWS_SECRET_ACCESS_KEY = Config.AWS_SECRET_ACCESS_KEY
+
+if (!AWS_ACCESS_KEY_ID || !AWS_SECRET_ACCESS_KEY) {
+  throw new Error('Incomplete AWS credentials!')
+}
+
+const EC2_INSTANCE_KEY_NAME = Config.EC2_INSTANCE_KEY_NAME
+
+if (!EC2_INSTANCE_KEY_NAME) {
+  throw new Error('EC2 instance key name not found!')
+}
+
 const client = Eris(TOKEN)
+
+const credentials = new Credentials({
+  accessKeyId: AWS_ACCESS_KEY_ID,
+  secretAccessKey: AWS_SECRET_ACCESS_KEY,
+})
+const ec2 = new EC2({
+  credentials,
+  region: 'ap-northeast-1',
+  apiVersion: '2016-11-15',
+  sslEnabled: true,
+});
+
+let ec2Instance
+
+(async () => {
+  try {
+    const data = await ec2.describeInstances({
+      Filters: [
+        {
+          Name: 'key-name',
+          Values: [
+            EC2_INSTANCE_KEY_NAME,
+          ],
+        },
+      ],
+    }).promise()
+
+    ec2Instance = data.Reservations?.[0]?.Instances?.[0] || null
+
+    if (!ec2Instance) {
+      throw new Error('No instance found!')
+    }
+    console.log(ec2Instance)
+  } catch (e) {
+    console.warn(e)
+    throw new Error(e)
+  }
+})()
 
 const members = new Collection(Member)
 const users = new Collection(User)
 const roles = new Collection(Role)
 
-const omitGuild = (record: any) => omit(record, 'guild')
+// const omitGuild = (record: any) => omit(record, 'guild')
 
 const updateState = (guild: Guild) => {
   guild.members.filter(({ user }) => !user.bot).forEach(member => members.add(member))
