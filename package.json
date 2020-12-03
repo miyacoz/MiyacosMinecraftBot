@@ -8,7 +8,7 @@
   },
   "dependencies": {
     "dotenv": "^8.2.0",
-    "eris": "^0.14.0",
+    "eris": "https://github.com/miyacoz/eris.git#fix-typing-inline-replies",
     "lodash": "^4.17.20",
     "mongodb": "^3.6.3"
   },

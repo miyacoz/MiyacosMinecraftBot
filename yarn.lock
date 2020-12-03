@@ -349,10 +349,9 @@ end-of-stream@^1.1.0:
   dependencies:
     once "^1.4.0"
 
-eris@^0.14.0:
+"eris@https://github.com/miyacoz/eris.git#fix-typing-inline-replies":
   version "0.14.0"
-  resolved "https://registry.yarnpkg.com/eris/-/eris-0.14.0.tgz#0d13391c0fc1a7b678b2f8d1fc3ec6aef05700d3"
-  integrity sha512-/W6X0SFR2swtA9oc4ga5Wh1TQcZtPgbUaDDdwYc67fvFUAtwC+V1xzWUZq2yDeJnTfB8Uot9SJWA8Lthe2sDtQ==
+  resolved "https://github.com/miyacoz/eris.git#c23e1c640c2082f0b8560d8e2ef0c90aa25acd1e"
   dependencies:
     ws "^7.2.1"
   optionalDependencies:
