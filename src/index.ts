@@ -15,12 +15,11 @@ import {
 
 import Config from './Config'
 
-const client = Eris(Config.TOKEN)
-
 const credentials = new Credentials({
   accessKeyId: Config.AWS_ACCESS_KEY_ID,
   secretAccessKey: Config.AWS_SECRET_ACCESS_KEY,
 })
+
 const ec2 = new EC2({
   credentials,
   region: 'ap-northeast-1',
@@ -32,7 +31,7 @@ let ec2Instance
 
 (async () => {
   try {
-    const data = await ec2.describeInstances({
+    const result = await ec2.describeInstances({
       Filters: [
         {
           Name: 'key-name',
@@ -43,7 +42,7 @@ let ec2Instance
       ],
     }).promise()
 
-    ec2Instance = data.Reservations?.[0]?.Instances?.[0] || null
+    ec2Instance = result.Reservations?.[0]?.Instances?.[0] || null
 
     if (!ec2Instance) {
       throw new Error('No instance found!')
@@ -54,6 +53,8 @@ let ec2Instance
     throw new Error(e)
   }
 })()
+
+const client = Eris(Config.TOKEN)
 
 const members = new Collection(Member)
 const users = new Collection(User)
