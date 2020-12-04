@@ -13,6 +13,7 @@ import {
 } from 'aws-sdk'
 
 import Config from './Config'
+import { Ec2Instance } from './Aws'
 
 const credentials = new Credentials({
   accessKeyId: Config.AWS_ACCESS_KEY_ID,
@@ -26,9 +27,9 @@ const ec2 = new EC2({
   sslEnabled: true,
 });
 
-let ec2Instance
+const ec2Instance = new Ec2Instance()
 
-(async () => {
+;(async () => {
   try {
     const result = await ec2.describeInstances({
       Filters: [
@@ -41,12 +42,13 @@ let ec2Instance
       ],
     }).promise()
 
-    ec2Instance = result.Reservations?.[0]?.Instances?.[0] || null
+    const i = result.Reservations?.[0]?.Instances?.[0] || null
 
-    if (!ec2Instance) {
+    if (!i) {
       throw new Error('No instance found!')
     }
-    console.log(ec2Instance)
+
+    ec2Instance.setData(i)
   } catch (e) {
     console.warn(e)
     throw new Error(e)
@@ -86,7 +88,10 @@ const reply = (client: Client, message: Message, content: string) =>
   })
 
 client
-  .on('ready', findGuildAndUpdateState)
+  .on('ready', () => {
+    findGuildAndUpdateState()
+    console.log(ec2Instance)
+  })
   .on('guildMemberRemove', updateState)
   .on('guildMemberUpdate', updateState)
   .on('guildRoleDelete', updateState)
