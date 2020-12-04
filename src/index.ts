@@ -15,36 +15,11 @@ import {
 
 import Config from './Config'
 
-const TOKEN = Config.TOKEN
-
-if (!TOKEN) {
-  throw new Error('No token found!')
-}
-
-const BOT_ID = Config.CLIENT_ID
-
-if (!BOT_ID) {
-  throw new Error('No client id found!')
-}
-
-const AWS_ACCESS_KEY_ID = Config.AWS_ACCESS_KEY_ID
-const AWS_SECRET_ACCESS_KEY = Config.AWS_SECRET_ACCESS_KEY
-
-if (!AWS_ACCESS_KEY_ID || !AWS_SECRET_ACCESS_KEY) {
-  throw new Error('Incomplete AWS credentials!')
-}
-
-const EC2_INSTANCE_KEY_NAME = Config.EC2_INSTANCE_KEY_NAME
-
-if (!EC2_INSTANCE_KEY_NAME) {
-  throw new Error('EC2 instance key name not found!')
-}
-
-const client = Eris(TOKEN)
+const client = Eris(Config.TOKEN)
 
 const credentials = new Credentials({
-  accessKeyId: AWS_ACCESS_KEY_ID,
-  secretAccessKey: AWS_SECRET_ACCESS_KEY,
+  accessKeyId: Config.AWS_ACCESS_KEY_ID,
+  secretAccessKey: Config.AWS_SECRET_ACCESS_KEY,
 })
 const ec2 = new EC2({
   credentials,
@@ -62,7 +37,7 @@ let ec2Instance
         {
           Name: 'key-name',
           Values: [
-            EC2_INSTANCE_KEY_NAME,
+            Config.EC2_INSTANCE_KEY_NAME,
           ],
         },
       ],
@@ -121,11 +96,10 @@ client
   .on('messageCreate', (message: Message) => {
     findGuildAndUpdateState()
 
-    if (message.mentions.some(user => user.id === BOT_ID)) {
+    if (message.mentions.some(user => user.id === Config.CLIENT_ID)) {
       const r = (content: string) => reply(client, message, content)
 
-      const sanitisedMessage = message.content.replace(new RegExp(`<@!${BOT_ID}>`), '').trim().toLowerCase()
-      console.log(sanitisedMessage, message.id)
+      const sanitisedMessage = message.content.replace(new RegExp(`<@!${Config.CLIENT_ID}>`), '').trim().toLowerCase()
 
       if (sanitisedMessage === 'ping') {
         r('Pong!')
