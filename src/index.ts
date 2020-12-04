@@ -1,13 +1,12 @@
 import Eris, {
   Client,
-  Collection,
   Guild,
   Member,
   Message,
   Role,
   User,
 } from 'eris'
-// import { omit } from 'lodash'
+import { omit } from 'lodash'
 import {
   EC2,
   Credentials,
@@ -56,18 +55,16 @@ let ec2Instance
 
 const client = Eris(Config.TOKEN)
 
-const members = new Collection(Member)
-const users = new Collection(User)
-const roles = new Collection(Role)
+const members: Set<Omit<Member, 'guild'>> = new Set()
+const users: Set<User> = new Set()
+const roles: Set<Omit<Role, 'guild'>> = new Set()
 
-// const omitGuild = (record: any) => omit(record, 'guild')
+const omitGuild = (record: any) => omit(record, 'guild')
 
 const updateState = (guild: Guild) => {
-  guild.members.filter(({ user }) => !user.bot).forEach(member => members.add(member))
+  guild.members.filter(({ user }) => !user.bot).forEach(member => members.add(omitGuild(member)))
   members.forEach(({ user }) => users.add(user))
-  guild.roles.forEach(role => roles.add(role))
-  // console.log(members.map(omitGuild))
-  // console.log(users, roles.map(omitGuild))
+  guild.roles.forEach(role => roles.add(omitGuild(role)))
 }
 
 const findGuildAndUpdateState = () => {
