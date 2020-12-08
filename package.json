@@ -2,9 +2,9 @@
   "name": "miyaco's-minecraft-bot-for-discord",
   "scripts": {
     "start": "run-p watch restarter",
-    "watch": "tsc --watch --esModuleInterop",
+    "watch": "tsc --watch --esModuleInterop --downlevelIteration",
     "restarter": "nodemon ./dist/index.js",
-    "build": "tsc --esModuleInterop"
+    "build": "tsc --esModuleInterop --downlevelIteration"
   },
   "dependencies": {
     "aws-sdk": "^2.802.0",

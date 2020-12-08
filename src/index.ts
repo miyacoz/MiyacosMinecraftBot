@@ -46,6 +46,22 @@ const post = (client: Client, message: Message, content: string, reply?: boolean
 const semaphore: Map<string, boolean> = new Map()
 const processingTasks: Message[] = []
 
+const hasRole = (userId: string, roleName: string): boolean => {
+  const memberRoles = members.get(userId)?.roles
+
+  if (!memberRoles) {
+    return false
+  }
+
+  const roleId = [...roles.values()].find(role => role.name === roleName)?.id
+
+  if (!roleId) {
+    return false
+  }
+
+  return memberRoles.includes(roleId)
+}
+
 client
   .on('ready', findGuildAndUpdateState)
   .on('guildMemberRemove', updateState)
@@ -82,6 +98,24 @@ client
 
         semaphore.set('status', false)
         processingTasks.shift()
+      } else if (/^delete/.test(sanitisedMessage)) {
+        if (hasRole(message.author.id, 'Discord Mod')) {
+          await t()
+
+          const limit = Number(sanitisedMessage.replace(/^delete /, '').trim().match(/^\d+/)?.[0])
+          if (!limit) {
+            await r('Please specify the number of messages to be deleted.')
+            return
+          }
+
+          const messageIds = (await client.getMessages(message.channel.id, limit)).map(m => m.id)
+
+          await client.deleteMessages(message.channel.id, messageIds)
+
+          await post(client, message, `${messageIds.length} ${messageIds.length === 1 ? 'message has' : 'messages have'} been deleted.`)
+        } else {
+          await r('You do not have required roles.')
+        }
       } else if (sanitisedMessage === 'ping') {
         await r('Pong!')
       } else if (sanitisedMessage === 'pong') {
