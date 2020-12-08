@@ -69,6 +69,10 @@ class Ec2Instance {
     return this._state
   }
 
+  public get isAvailable(): boolean {
+    return this._state === 'running'
+  }
+
   public get stateReason(): string {
     return this._stateReason
   }

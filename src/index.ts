@@ -45,6 +45,8 @@ const post = (client: Client, message: Message, content: string, reply?: boolean
     messageReferenceID: reply ? message.id : undefined,
   })
 
+const semaphore: Map<string, boolean> = new Map()
+
 client
   .on('ready', findGuildAndUpdateState)
   .on('guildMemberRemove', updateState)
@@ -56,17 +58,29 @@ client
 
     if (message.mentions.some(user => user.id === Config.CLIENT_ID)) {
       const r = (content: string) => post(client, message, content, true)
+      const t = () => client.sendChannelTyping(message.channel.id)
 
       const sanitisedMessage = message.content.replace(new RegExp(`<@!${Config.CLIENT_ID}>`), '').trim().toLowerCase()
 
       // not using switch because some complex condition might be needed
       if (sanitisedMessage === 'status') {
+        if (semaphore.get('status')) {
+          await r('Wait!')
+          await t()
+          return
+        }
+
+        semaphore.set('status', true)
+
         const [result] = await Promise.all([
           Instance.getInfo(),
-          client.sendChannelTyping(message.channel.id),
+          t(),
         ])
 
-        await r(`The server is now ${result.state.replace('-', ' ')}.`)
+        await new Promise(s => setTimeout(() => s(true), 5000))
+        await r(`The server is now ${result.isAvailable ? 'available' : 'unavailable'} (${result.state.replace('-', ' ')}).`)
+
+        semaphore.set('status', false)
       } else if (sanitisedMessage === 'ping') {
         r('Pong!')
       } else if (sanitisedMessage === 'pong') {
