@@ -55,15 +55,17 @@ client
     findGuildAndUpdateState()
 
     if (message.mentions.some(user => user.id === Config.CLIENT_ID)) {
-      client.sendChannelTyping(message.channel.id)
-
       const r = (content: string) => post(client, message, content, true)
 
       const sanitisedMessage = message.content.replace(new RegExp(`<@!${Config.CLIENT_ID}>`), '').trim().toLowerCase()
 
       // not using switch because some complex condition might be needed
       if (sanitisedMessage === 'status') {
-        const result = await Instance.getInfo()
+        const [result] = await Promise.all([
+          Instance.getInfo(),
+          client.sendChannelTyping(message.channel.id),
+        ])
+
         await r(`The server is now ${result.state.replace('-', ' ')}.`)
       } else if (sanitisedMessage === 'ping') {
         r('Pong!')
