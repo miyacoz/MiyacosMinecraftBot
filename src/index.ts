@@ -46,6 +46,7 @@ const post = (client: Client, message: Message, content: string, reply?: boolean
   })
 
 const semaphore: Map<string, boolean> = new Map()
+const processingTasks: Message[] = []
 
 client
   .on('ready', findGuildAndUpdateState)
@@ -71,6 +72,7 @@ client
         }
 
         semaphore.set('status', true)
+        processingTasks.push(message)
 
         const [result] = await Promise.all([
           Instance.getInfo(),
@@ -81,12 +83,17 @@ client
         await r(`The server is now ${result.isAvailable ? 'available' : 'unavailable'} (${result.state.replace('-', ' ')}).`)
 
         semaphore.set('status', false)
+        processingTasks.shift()
       } else if (sanitisedMessage === 'ping') {
-        r('Pong!')
+        await r('Pong!')
       } else if (sanitisedMessage === 'pong') {
-        r('Ping!')
+        await r('Ping!')
       } else {
-        r('?')
+        await r('?')
+      }
+
+      if (processingTasks.length) {
+        await t()
       }
     }
   })
