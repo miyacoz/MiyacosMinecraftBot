@@ -11,8 +11,6 @@ import { omit } from 'lodash'
 import Config from './Config'
 import Instance from './Aws'
 
-Instance.getInfo()
-
 const client = Eris(Config.TOKEN)
 
 const members: Map<string, Omit<Member, 'guild'>> = new Map()
