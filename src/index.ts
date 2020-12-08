@@ -15,16 +15,16 @@ Instance.getInfo()
 
 const client = Eris(Config.TOKEN)
 
-const members: Set<Omit<Member, 'guild'>> = new Set()
-const users: Set<User> = new Set()
-const roles: Set<Omit<Role, 'guild'>> = new Set()
+const members: Map<string, Omit<Member, 'guild'>> = new Map()
+const users: Map<string, User> = new Map()
+const roles: Map<string, Omit<Role, 'guild'>> = new Map()
 
 const omitGuild = (record: any) => omit(record, 'guild')
 
 const updateState = (guild: Guild) => {
-  guild.members.filter(({ user }) => !user.bot).forEach(member => members.add(omitGuild(member)))
-  members.forEach(({ user }) => users.add(user))
-  guild.roles.forEach(role => roles.add(omitGuild(role)))
+  guild.members.filter(({ user }) => !user.bot).forEach(member => members.set(member.id, omitGuild(member)))
+  members.forEach(({ user }) => users.set(user.id, user))
+  guild.roles.forEach(role => roles.set(role.id, omitGuild(role)))
 }
 
 const findGuildAndUpdateState = () => {
