@@ -97,7 +97,10 @@ client
         await r(`The server is now ${result.isAvailable ? 'available' : 'unavailable'} (${result.state.replace('-', ' ')}).`)
 
         semaphore.set('status', false)
-        processingTasks.shift()
+        const index = processingTasks.findIndex(messageOfTask => messageOfTask.id === message.id)
+        if (index >= 0) {
+          processingTasks.splice(index, 1)
+        }
       } else if (/^delete/.test(sanitisedMessage)) {
         if (hasRole(message.author.id, 'Discord Mod')) {
           await t()
