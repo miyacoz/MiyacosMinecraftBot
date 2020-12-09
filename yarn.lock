@@ -383,9 +383,9 @@ end-of-stream@^1.1.0:
   dependencies:
     once "^1.4.0"
 
-"eris@https://github.com/miyacoz/eris.git#fix-typing-inline-replies":
+"eris@https://github.com/miyacoz/eris.git#miyaco-dev":
   version "0.14.0"
-  resolved "https://github.com/miyacoz/eris.git#c23e1c640c2082f0b8560d8e2ef0c90aa25acd1e"
+  resolved "https://github.com/miyacoz/eris.git#2a7818d5999ddb400d4267399ea8f539d5a1f2a4"
   dependencies:
     ws "^7.2.1"
   optionalDependencies:

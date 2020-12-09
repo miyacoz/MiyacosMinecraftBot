@@ -13,19 +13,21 @@ import Instance from './Aws'
 
 const client = Eris(Config.TOKEN)
 
+// let bot: Omit<Member, 'guild'> | null
 const members: Map<string, Omit<Member, 'guild'>> = new Map()
 const users: Map<string, User> = new Map()
 const roles: Map<string, Omit<Role, 'guild'>> = new Map()
 
 const omitGuild = (record: any) => omit(record, 'guild')
 
-const updateState = (guild: Guild) => {
+const updateState = (guild: Guild): void => {
+  // bot = guild.members.filter(({ user }) => user.bot).map(omitGuild)?.[0] || null
   guild.members.filter(({ user }) => !user.bot).forEach(member => members.set(member.id, omitGuild(member)))
   members.forEach(({ user }) => users.set(user.id, user))
   guild.roles.forEach(role => roles.set(role.id, omitGuild(role)))
 }
 
-const findGuildAndUpdateState = () => {
+const findGuildAndUpdateState = (): void => {
   const guild = client.guilds.find(({ name }) => /miyaco.*minecraft/i.test(name))
 
   if (guild) {
@@ -63,7 +65,20 @@ const hasRole = (userId: string, roleName: string | string[]): boolean => {
 }
 
 client
-  .on('ready', findGuildAndUpdateState)
+  .on('ready', async () => {
+    findGuildAndUpdateState()
+
+    /*
+     * FIXME: enable this after eris starts supporting GATEWAY_VERSION = 8
+    if (bot) {
+      const result = await Instance.getInfo()
+      await client.editStatus(bot.status, {
+        name: `Server is ${result.isAvailable ? 'UP' : 'DOWN'} now`,
+        type: 4,
+      })
+    }
+     */
+  })
   .on('guildMemberRemove', updateState)
   .on('guildMemberUpdate', updateState)
   .on('guildRoleDelete', updateState)
