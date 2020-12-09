@@ -46,14 +46,14 @@ const post = (client: Client, message: Message, content: string, reply?: boolean
 const semaphore: Map<string, boolean> = new Map()
 const processingTasks: Message[] = []
 
-const hasRole = (userId: string, roleName: string): boolean => {
+const hasRole = (userId: string, roleName: string | string[]): boolean => {
   const memberRoles = members.get(userId)?.roles
 
   if (!memberRoles) {
     return false
   }
 
-  const roleId = [...roles.values()].find(role => role.name === roleName)?.id
+  const roleId = [...roles.values()].find(role => role.name === roleName || roleName.includes(role.name))?.id
 
   if (!roleId) {
     return false
