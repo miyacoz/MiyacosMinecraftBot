@@ -81,7 +81,11 @@ client
 
           await client.deleteMessages(message.channel.id, messageIds)
 
-          await post(message, `${messageIds.length} ${messageIds.length === 1 ? 'message has' : 'messages have'} been deleted.`)
+          const deletionAnnouncement = await post(message, `${messageIds.length} ${messageIds.length === 1 ? 'message has' : 'messages have'} been deleted.`)
+          const timerId = setTimeout(() => {
+            client.deleteMessage(message.channel.id, deletionAnnouncement.id)
+            clearTimeout(timerId)
+          }, 5000)
         })
       } else if (sanitisedMessage === 'ping') {
         await r('Pong!')
@@ -96,6 +100,6 @@ client
       }
     }
   })
-  .on('messageDelete', updateGuildState)
-  .on('messageUpdate', updateGuildState)
+  .on('messageDelete', () => updateGuildState())
+  .on('messageUpdate', () => updateGuildState())
   .connect()
