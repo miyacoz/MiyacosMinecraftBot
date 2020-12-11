@@ -6,7 +6,8 @@ import Eris, {
 
 import Config from './Config'
 import Instance from './Aws'
-import { store, updateGuildState as originalUpdateGuildState } from './Bot'
+import { store } from './Store'
+import { updateGuildState as originalUpdateGuildState } from './Bot'
 
 const client = Eris(Config.TOKEN)
 
