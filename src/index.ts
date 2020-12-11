@@ -1,39 +1,16 @@
 import Eris, {
   Client,
   Guild,
-  Member,
   Message,
-  Role,
-  User,
 } from 'eris'
-import { omit } from 'lodash'
 
 import Config from './Config'
 import Instance from './Aws'
+import { store, updateGuildState as originalUpdateGuildState } from './Bot'
 
 const client = Eris(Config.TOKEN)
 
-// let bot: Omit<Member, 'guild'> | null
-const members: Map<string, Omit<Member, 'guild'>> = new Map()
-const users: Map<string, User> = new Map()
-const roles: Map<string, Omit<Role, 'guild'>> = new Map()
-
-const omitGuild = (record: any) => omit(record, 'guild')
-
-const updateState = (guild: Guild): void => {
-  // bot = guild.members.filter(({ user }) => user.bot).map(omitGuild)?.[0] || null
-  guild.members.filter(({ user }) => !user.bot).forEach(member => members.set(member.id, omitGuild(member)))
-  members.forEach(({ user }) => users.set(user.id, user))
-  guild.roles.forEach(role => roles.set(role.id, omitGuild(role)))
-}
-
-const findGuildAndUpdateState = (): void => {
-  const guild = client.guilds.find(({ name }) => /miyaco.*minecraft/i.test(name))
-
-  if (guild) {
-    updateState(guild)
-  }
-}
+const updateGuildState = (guild?: Guild): void => originalUpdateGuildState(client, store, guild)
 
 const post = (client: Client, message: Message, content: string, reply?: boolean): Promise<Message> =>
   // FIXME: restore eris version to dev/master
@@ -49,13 +26,13 @@ const semaphore: Map<string, boolean> = new Map()
 const processingTasks: Message[] = []
 
 const hasRole = (userId: string, roleName: string | string[]): boolean => {
-  const memberRoles = members.get(userId)?.roles
+  const memberRoles = store.members.get(userId)?.roles
 
   if (!memberRoles) {
     return false
   }
 
-  const roleId = [...roles.values()].find(role => role.name === roleName || roleName.includes(role.name))?.id
+  const roleId = [...store.roles.values()].find(role => role.name === roleName || roleName.includes(role.name))?.id
 
   if (!roleId) {
     return false
@@ -84,7 +61,7 @@ const semaphoredAction = async (semaphoreName: string, message: Message, action:
 
 client
   .on('ready', async () => {
-    findGuildAndUpdateState()
+    updateGuildState()
 
     /*
      * FIXME: enable this after eris starts supporting GATEWAY_VERSION = 8
@@ -97,12 +74,12 @@ client
     }
      */
   })
-  .on('guildMemberRemove', updateState)
-  .on('guildMemberUpdate', updateState)
-  .on('guildRoleDelete', updateState)
-  .on('guildRoleUpdate', updateState)
+  .on('guildMemberRemove', updateGuildState)
+  .on('guildMemberUpdate', updateGuildState)
+  .on('guildRoleDelete', updateGuildState)
+  .on('guildRoleUpdate', updateGuildState)
   .on('messageCreate', async (message: Message) => {
-    findGuildAndUpdateState()
+    updateGuildState()
 
     if (message.mentions.some(user => user.id === Config.CLIENT_ID)) {
       const r = (content: string) => post(client, message, content, true)
@@ -157,6 +134,6 @@ client
       }
     }
   })
-  .on('messageDelete', findGuildAndUpdateState)
-  .on('messageUpdate', findGuildAndUpdateState)
+  .on('messageDelete', updateGuildState)
+  .on('messageUpdate', updateGuildState)
   .connect()
