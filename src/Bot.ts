@@ -1,6 +1,7 @@
 import {
   Client,
   Guild,
+  Message,
 } from 'eris'
 import { omit } from 'lodash'
 
@@ -21,4 +22,30 @@ export const updateGuildState = (client: Client, store: IStore, guild?: Guild): 
   if (g) {
     updateMembersAndUsersAndRoles(g, store)
   }
+}
+
+export const postMessage = (client: Client, replyTo: Message, content: string, reply?: boolean): Promise<Message> =>
+  // FIXME: restore eris version to dev/master
+  client.createMessage(replyTo.channel.id, {
+    content,
+    allowedMentions: {
+      repliedUser: true,
+    },
+    messageReferenceID: reply ? replyTo.id : undefined,
+  })
+
+export const hasRole = (store: IStore, userId: string, roleName: string | string[]): boolean => {
+  const memberRoles = store.members.get(userId)?.roles
+
+  if (!memberRoles) {
+    return false
+  }
+
+  const roleId = [...store.roles.values()].find(role => role.name === roleName || roleName.includes(role.name))?.id
+
+  if (!roleId) {
+    return false
+  }
+
+  return memberRoles.includes(roleId)
 }

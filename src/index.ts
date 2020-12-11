@@ -1,5 +1,4 @@
 import Eris, {
-  Client,
   Guild,
   Message,
 } from 'eris'
@@ -7,44 +6,24 @@ import Eris, {
 import Config from './Config'
 import Instance from './Aws'
 import { store } from './Store'
-import { updateGuildState as originalUpdateGuildState } from './Bot'
+import {
+  updateGuildState as originalUpdateGuildState,
+  postMessage,
+  hasRole as originalHasRole,
+} from './Bot'
 
 const client = Eris(Config.TOKEN)
 
-const updateGuildState = (guild?: Guild): void => originalUpdateGuildState(client, store, guild)
-
-const post = (client: Client, message: Message, content: string, reply?: boolean): Promise<Message> =>
-  // FIXME: restore eris version to dev/master
-  client.createMessage(message.channel.id, {
-    content,
-    allowedMentions: {
-      repliedUser: true,
-    },
-    messageReferenceID: reply ? message.id : undefined,
-  })
+const updateGuildState = (guild?: Guild) => originalUpdateGuildState(client, store, guild)
+const post = (replyTo: Message, content: string, reply?: boolean) => postMessage(client, replyTo, content, reply)
+const hasRole = (userId: string, roleName: string | string[]) => originalHasRole(store, userId, roleName)
 
 const semaphore: Map<string, boolean> = new Map()
 const processingTasks: Message[] = []
 
-const hasRole = (userId: string, roleName: string | string[]): boolean => {
-  const memberRoles = store.members.get(userId)?.roles
-
-  if (!memberRoles) {
-    return false
-  }
-
-  const roleId = [...store.roles.values()].find(role => role.name === roleName || roleName.includes(role.name))?.id
-
-  if (!roleId) {
-    return false
-  }
-
-  return memberRoles.includes(roleId)
-}
-
 const semaphoredAction = async (semaphoreName: string, message: Message, action: Function): Promise<void> => {
   if (semaphore.get(semaphoreName)) {
-    await post(client, message, 'Wait!', true)
+    await post(message, 'Wait!', true)
     return
   }
 
@@ -83,7 +62,7 @@ client
     updateGuildState()
 
     if (message.mentions.some(user => user.id === Config.CLIENT_ID)) {
-      const r = (content: string) => post(client, message, content, true)
+      const r = (content: string) => post(message, content, true)
       const t = () => client.sendChannelTyping(message.channel.id)
       const isDiscordMod = hasRole(message.author.id, 'Discord Mod')
       const a = (s: string, a: Function) => semaphoredAction(s, message, a)
@@ -120,7 +99,7 @@ client
 
           await client.deleteMessages(message.channel.id, messageIds)
 
-          await post(client, message, `${messageIds.length} ${messageIds.length === 1 ? 'message has' : 'messages have'} been deleted.`)
+          await post(message, `${messageIds.length} ${messageIds.length === 1 ? 'message has' : 'messages have'} been deleted.`)
         })
       } else if (sanitisedMessage === 'ping') {
         await r('Pong!')
