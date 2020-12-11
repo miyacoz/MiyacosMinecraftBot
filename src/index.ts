@@ -5,7 +5,10 @@ import Eris, {
 
 import Config from './Config'
 import Instance from './Aws'
-import { store } from './Store'
+import {
+  store,
+  semaphoredAction as originalSemaphoredAction,
+} from './Store'
 import {
   updateGuildState as originalUpdateGuildState,
   postMessage,
@@ -17,27 +20,8 @@ const client = Eris(Config.TOKEN)
 const updateGuildState = (guild?: Guild) => originalUpdateGuildState(client, store, guild)
 const post = (replyTo: Message, content: string, reply?: boolean) => postMessage(client, replyTo, content, reply)
 const hasRole = (userId: string, roleName: string | string[]) => originalHasRole(store, userId, roleName)
-
-const semaphore: Map<string, boolean> = new Map()
-const processingTasks: Message[] = []
-
-const semaphoredAction = async (semaphoreName: string, message: Message, action: Function): Promise<void> => {
-  if (semaphore.get(semaphoreName)) {
-    await post(message, 'Wait!', true)
-    return
-  }
-
-  semaphore.set(semaphoreName, true)
-  processingTasks.push(message)
-
-  await action()
-
-  semaphore.set(semaphoreName, false)
-  const index = processingTasks.findIndex(messageOfTask => messageOfTask.id === message.id)
-  if (index >= 0) {
-    processingTasks.splice(index, 1)
-  }
-}
+const semaphoredAction = (semaphoreName: string, message: Message, action: Function) =>
+  originalSemaphoredAction(store, semaphoreName, message, action, async () => post(message, 'Wait!', true))
 
 client
   .on('ready', async () => {
@@ -109,7 +93,7 @@ client
         await r('?')
       }
 
-      if (processingTasks.length) {
+      if (store.processingTasks.length) {
         await t()
       }
     }
