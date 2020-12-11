@@ -64,6 +64,24 @@ const hasRole = (userId: string, roleName: string | string[]): boolean => {
   return memberRoles.includes(roleId)
 }
 
+const semaphoredAction = async (semaphoreName: string, message: Message, action: Function): Promise<void> => {
+  if (semaphore.get(semaphoreName)) {
+    await post(client, message, 'Wait!', true)
+    return
+  }
+
+  semaphore.set(semaphoreName, true)
+  processingTasks.push(message)
+
+  await action()
+
+  semaphore.set(semaphoreName, false)
+  const index = processingTasks.findIndex(messageOfTask => messageOfTask.id === message.id)
+  if (index >= 0) {
+    processingTasks.splice(index, 1)
+  }
+}
+
 client
   .on('ready', async () => {
     findGuildAndUpdateState()
@@ -89,35 +107,29 @@ client
     if (message.mentions.some(user => user.id === Config.CLIENT_ID)) {
       const r = (content: string) => post(client, message, content, true)
       const t = () => client.sendChannelTyping(message.channel.id)
+      const isDiscordMod = hasRole(message.author.id, 'Discord Mod')
+      const a = (s: string, a: Function) => semaphoredAction(s, message, a)
 
       const sanitisedMessage = message.content.replace(new RegExp(`<@!${Config.CLIENT_ID}>`), '').trim().toLowerCase()
 
       // not using switch because some complex condition might be needed
       if (sanitisedMessage === 'status') {
-        if (semaphore.get('status')) {
-          await r('Wait!')
-          await t()
+        await a('status', async (): Promise<void> => {
+          const [result] = await Promise.all([
+            Instance.getInfo(),
+            t(),
+          ])
+
+          await new Promise(s => setTimeout(() => s(true), 5000))
+          await r(`The server is now ${result.isAvailable ? 'available' : 'unavailable'} (${result.state.replace('-', ' ')}).`)
+        })
+      } else if (/^delete/.test(sanitisedMessage)) {
+        if (!isDiscordMod) {
+          await r('You do not have required roles.')
           return
         }
 
-        semaphore.set('status', true)
-        processingTasks.push(message)
-
-        const [result] = await Promise.all([
-          Instance.getInfo(),
-          t(),
-        ])
-
-        await new Promise(s => setTimeout(() => s(true), 5000))
-        await r(`The server is now ${result.isAvailable ? 'available' : 'unavailable'} (${result.state.replace('-', ' ')}).`)
-
-        semaphore.set('status', false)
-        const index = processingTasks.findIndex(messageOfTask => messageOfTask.id === message.id)
-        if (index >= 0) {
-          processingTasks.splice(index, 1)
-        }
-      } else if (/^delete/.test(sanitisedMessage)) {
-        if (hasRole(message.author.id, 'Discord Mod')) {
+        await a('delete', async () => {
           await t()
 
           const limit = Number(sanitisedMessage.replace(/^delete /, '').trim().match(/^\d+/)?.[0])
@@ -131,9 +143,7 @@ client
           await client.deleteMessages(message.channel.id, messageIds)
 
           await post(client, message, `${messageIds.length} ${messageIds.length === 1 ? 'message has' : 'messages have'} been deleted.`)
-        } else {
-          await r('You do not have required roles.')
-        }
+        })
       } else if (sanitisedMessage === 'ping') {
         await r('Pong!')
       } else if (sanitisedMessage === 'pong') {
