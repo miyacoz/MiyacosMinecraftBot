@@ -23,7 +23,13 @@ export const store = {
 }
 
 
-export const semaphoredAction = async (store: IStore, semaphoreName: string, message: Message, action: Function, actionWhenAwait?: Function): Promise<void> => {
+export const semaphoredAction = async (
+  store: IStore,
+  semaphoreName: string,
+  message: Message,
+  action: Function,
+  actionWhenAwait?: Function,
+): Promise<void> => {
   if (store.semaphore.get(semaphoreName)) {
     if (actionWhenAwait) {
       await actionWhenAwait()
