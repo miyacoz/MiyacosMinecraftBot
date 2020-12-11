@@ -56,13 +56,11 @@ client
       // not using switch because some complex condition might be needed
       if (sanitisedMessage === 'status') {
         await a('status', async (): Promise<void> => {
-          const [result] = await Promise.all([
-            Instance.getInfo(),
-            t(),
-          ])
+          await t()
 
-          await new Promise(s => setTimeout(() => s(true), 5000))
-          await r(`The server is now ${result.isAvailable ? 'available' : 'unavailable'} (${result.state.replace('-', ' ')}).`)
+          const result = await Instance.getInfo()
+
+          await r(`The server is now ${result.isAvailable ? '' : 'un'}available (${result.state.replace('-', ' ')}).`)
         })
       } else if (/^delete/.test(sanitisedMessage)) {
         if (!isDiscordMod) {
