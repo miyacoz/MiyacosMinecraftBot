@@ -10,7 +10,7 @@
     "aws-sdk": "^2.802.0",
     "dotenv": "^8.2.0",
     "eris": "https://github.com/miyacoz/eris.git#miyaco-dev",
-    "lodash": "^4.17.20",
+    "lodash": "^4.17.21",
     "mongodb": "^3.6.3"
   },
   "devDependencies": {
